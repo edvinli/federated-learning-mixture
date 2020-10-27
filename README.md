@@ -1,5 +1,5 @@
 # federated-learning-mixture
-Code for the paper [Federated learning using a mixture of experts](https://arxiv.org/abs/2010.02056)
+This repo contains code for the paper [Federated learning using a mixture of experts](https://arxiv.org/abs/2010.02056).
 
 # Example
 To run the code on cifar10 with 5 clients, run the following line. Results will be saved in /save/results.
