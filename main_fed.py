@@ -18,7 +18,7 @@ from sys import exit
 
 
 if __name__ == '__main__':
-    filename = 'results_pretraingate_lr'
+    filename = 'results'
     filexist = os.path.isfile('save/'+filename) 
     if(not filexist):
         with open('save/'+filename,'a') as f1:
