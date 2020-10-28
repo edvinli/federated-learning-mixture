@@ -84,9 +84,21 @@ if __name__ == '__main__':
             net_glob_fedAvg = CNNCifar(args=args).to(args.device)
             gate_rep = MLP2(dim_in = 84*2 , dim_hidden = 84, dim_out=args.num_classes).to(args.device)
             gate_repft = MLP2(dim_in = 84*2 , dim_hidden = 84, dim_out=args.num_classes).to(args.device)
+            gates_3 = GateCNNSoftmax(args=args).to(args.device)
+            gates_e2e = GateCNN(args=args).to(args.device)
+            net_locals = CNNCifar(args=args).to(args.device)
+
+            #opt-out fraction
+            opt = np.ones(args.num_clients)
+            opt_out = np.random.choice(range(args.num_clients), size = int(args.opt*args.num_clients), replace=False)
+            opt[opt_out] = 0.0
+                
+        elif (args.model == 'cnn') and (args.dataset in ['mnist', 'fashion-mnist']):
+            net_glob_fedAvg = CNNFashion(args=args).to(args.device)
+
             #gates = []
-            #gates_3 = GateCNNSoftmax(args=args).to(args.device)
-            #gates_e2e = GateCNN(args=args).to(args.device)
+            gates_3 = GateCNNSoftmax(args=args).to(args.device)
+            gates_e2e = GateCNN(args=args).to(args.device)
             net_locals = CNNCifar(args=args).to(args.device)
 
             #opt-out fraction
@@ -94,53 +106,25 @@ if __name__ == '__main__':
             opt_out = np.random.choice(range(args.num_clients), size = int(args.opt*args.num_clients), replace=False)
             opt[opt_out] = 0.0
 
-            #for i in range(args.num_clients):
-                #gates.append(GateCNN(args=args).to(args.device))
-                #gates_3.append(GateCNNSoftmax(args=args).to(args.device))
-                #gates_e2e.append(GateCNN(args=args).to(args.device))
-                #net_locals.append(CNNCifar(args=args).to(args.device))
-                
-        elif (args.model == 'cnn') and (args.dataset in ['mnist', 'fashion-mnist']):
-            net_glob_fedAvg = CNNFashion(args=args).to(args.device)
-
-            #gates = []
-            gates_e2e = []
-            net_locals = []
-
-            #opt-out fraction
-            opt = np.ones(args.num_clients)
-            opt_out = np.random.choice(range(args.num_clients), size = int(args.opt*args.num_clients), replace=False)
-            opt[opt_out] = 0.0
-
-            for i in range(args.num_clients):
-                #gates.append(GateCNNFashion(args=args).to(args.device))
-                gates_e2e.append(GateCNNFashion(args=args).to(args.device))
-                net_locals.append(CNNFashion(args=args).to(args.device))
-                
         elif args.model == 'mlp':
             net_glob_fedAvg = MLP(dim_in=input_length, dim_hidden=200, dim_out=args.num_classes).to(args.device)
 
             #gates = []
-            net_locals = []
-            gates_e2e = []
+            net_locals = MLP(dim_in=input_length, dim_hidden=200, dim_out=args.num_classes).to(args.device)
+            gates_e2e = GateMLP(dim_in = input_length,dim_hidden=200, dim_out=1).to(args.device)
             
             #opt-out fraction
             opt = np.ones(args.num_clients)
             opt_out = np.random.choice(range(args.num_clients), size = int(args.opt*args.num_clients), replace=False)
             opt[opt_out] = 0.0
-            print(opt)
-            for i in range(args.num_clients):
-                #gates.append(GateMLP(dim_in = len_in,dim_hidden=200, dim_out=1).to(args.device))
-                gates_e2e.append(GateMLP(dim_in = input_length,dim_hidden=200, dim_out=1).to(args.device))
-                net_locals.append(MLP(dim_in=input_length, dim_hidden=200, dim_out=args.num_classes).to(args.device))
                 
         else:
             exit('error: no such model')
         
         print(net_glob_fedAvg)
-        #for i in range(args.num_clients):
-            #gates[i].train()
-            #gates_e2e[i].train()
+        for i in range(args.num_clients):
+            gates[i].train()
+            gates_e2e[i].train()
             #net_locals[i].train()
 
         net_locals.train()
@@ -182,19 +166,6 @@ if __name__ == '__main__':
         train_acc_ft, train_acc_locals = [], []
         acc_test_l, acc_test_m = [], []
         gate_values = []
-        
-        #give gate network same weights as FedAvg model
-        gates_e2e = copy.deepcopy(net_glob_fedAvg)
-        gates_e2e.fc3 = nn.Linear(84, 1)
-        gates_e2e.activation = nn.Sigmoid()
-        gates_e2e.to(args.device)
-        gates_e2e.train()
-        
-        gates_3 = copy.deepcopy(net_glob_fedAvg)
-        gates_3.fc3 = nn.Linear(84, 3)
-        gates_3.activation = nn.Softmax()
-        gates_3.to(args.device)
-        gates_3.train()
         
         for idx in range(args.num_clients):
 
