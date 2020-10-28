@@ -2,7 +2,7 @@
 This repo contains code for the paper [Federated learning using a mixture of experts](https://arxiv.org/abs/2010.02056).
 
 # Example
-To run the code on cifar10 with 5 clients, run the following line. Results will be saved in /save/results.
+To run the code on cifar100 with 50 clients, run the following line. Results will be saved in /save/results.
 
 `python main_fed.py --model 'cnn' --dataset 'cifar100' --n_data 500 --num_clients 50 --num_classes 100 --epochs 45 --train_frac 0.2 --local_ep 3 --opt 0 --p 1.0 --gpu 0 --runs 1`
 # Results
