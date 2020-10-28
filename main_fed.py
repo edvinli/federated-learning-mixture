@@ -122,11 +122,9 @@ if __name__ == '__main__':
             exit('error: no such model')
         
         print(net_glob_fedAvg)
-        for i in range(args.num_clients):
-            gates[i].train()
-            gates_e2e[i].train()
-            #net_locals[i].train()
 
+        gates_e2e.train()
+        gates_3.train()
         net_locals.train()
         net_glob_fedAvg.train()
 
