@@ -55,6 +55,24 @@ class GateMLP(nn.Module):
         x = self.layer_hidden(x)
         x = self.activation(x)
         return x
+    
+class GateMLPSoftmax(nn.Module):
+    def __init__(self, dim_in, dim_hidden, dim_out):
+        super(GateMLP, self).__init__()
+        self.layer_input = nn.Linear(dim_in, dim_hidden)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout()
+        self.layer_hidden = nn.Linear(dim_hidden, dim_out)
+        self.activation = nn.Softmax()
+
+    def forward(self, x):
+        x = x.view(-1, x.shape[1]*x.shape[-2]*x.shape[-1])
+        x = self.layer_input(x)
+        x = self.dropout(x)
+        x = self.relu(x)
+        x = self.layer_hidden(x)
+        x = self.activation(x)
+        return x
 
 
 class CNNCifar(nn.Module):
