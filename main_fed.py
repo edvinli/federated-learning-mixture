@@ -112,7 +112,7 @@ if __name__ == '__main__':
             #gates = []
             net_locals = MLP(dim_in=input_length, dim_hidden=200, dim_out=args.num_classes).to(args.device)
             gates_e2e = GateMLP(dim_in = input_length,dim_hidden=200, dim_out=1).to(args.device)
-            
+            gates_3 = GateMLPSoftmax(dim_in = input_length,dim_hidden=200, dim_out=3).to(args.device)
             #opt-out fraction
             opt = np.ones(args.num_clients)
             opt_out = np.random.choice(range(args.num_clients), size = int(args.opt*args.num_clients), replace=False)
