@@ -141,7 +141,7 @@ class ClientUpdate(object):
                 net_global.zero_grad()
                 gate.zero_grad()
                 
-                _, gate_weight = gate(images)
+                gate_weight = gate(images)
                 _, local_probs = net_local(images)
                 _, global_probs = net_global(images)
                 log_probs = gate_weight * local_probs + (1-gate_weight) * global_probs
@@ -259,7 +259,7 @@ class ClientUpdate(object):
 
                 gate.zero_grad()
                 
-                _, gate_weight = gate(images)
+                gate_weight = gate(images)
                 #log_probs = gate_weight * net_local(images) + (1-gate_weight) * net_global(images)
                 log_probs = 0
                 for i in range(len(nets)):
@@ -329,7 +329,7 @@ class ClientUpdate(object):
             label_values = np.array([])
             for idx, (data,target) in enumerate(self.ldr_val):
                 data, target = data.to(self.args.device), target.to(self.args.device)
-                _, gate_weight = gate(data)
+                gate_weight = gate(data)
                 
                 gate_values = np.append(gate_values,gate_weight.item())
                 label_values = np.append(label_values,target.item())
@@ -359,7 +359,7 @@ class ClientUpdate(object):
             #label_values = np.array([])
             for idx, (data,target) in enumerate(self.ldr_val):
                 data, target = data.to(self.args.device), target.to(self.args.device)
-                _, gate_weight = gate(data)
+                gate_weight = gate(data)
                 log_probs = 0
                 for i in range(len(nets)):
                     _, net_probs = nets[i](data)
