@@ -1,4 +1,4 @@
-# federated-learning-mixture
+# Federated learning using a mixture of experts
 This repo contains code for the paper [Federated learning using a mixture of experts](https://arxiv.org/abs/2010.02056).
 
 # Example
