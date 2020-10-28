@@ -115,7 +115,7 @@ class GateCNN(nn.Module):
         x = x.view(-1, 16 * 5 * 5)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(activation)
+        x = self.fc3(self.activation)
         x = self.sigmoid(x)
         return x
     
