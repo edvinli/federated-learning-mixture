@@ -13,7 +13,8 @@ def args_parser():
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum (default: 0.5)")
     parser.add_argument('--n_data', type=float, default=500, help="datasize on each client")
     parser.add_argument('--train_frac', type=float, default=0.1, help="fraction of training data size")
-
+    parser.add_argument('--n_data_test',type=float,default=100,help="test datasize on each client")
+    parser.add_argument('--overlap', action='store_true', help='whether to allow label overlap between clients or not')
     # model arguments
     parser.add_argument('--model', type=str, default='cnn', help='which model to use')
     parser.add_argument('--optim', type=str, default='sgd')

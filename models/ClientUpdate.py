@@ -22,15 +22,17 @@ class DatasetSplit(Dataset):
 
 
 class ClientUpdate(object):
-    def __init__(self, args, dataset=None, idxs=None):
+    def __init__(self, args, train_set=None,  val_set=None, idxs_train=None, idxs_val=None):
         self.args = args
         self.loss_func = nn.NLLLoss()
         self.lr = 1e-5
         self.selected_clients = []
-        self.train_val_set = DatasetSplit(dataset,idxs)
-        dataset_length = len(self.train_val_set)
-        self.train_set, self.val_set = torch.utils.data.random_split(self.train_val_set,[round(args.train_frac*dataset_length),round((1-args.train_frac)*dataset_length)],generator=torch.Generator().manual_seed(23))
+        self.train_set = DatasetSplit(train_set,idxs_train)
+        #dataset_length = len(self.train_val_set)
+        #self.train_set, _ = torch.utils.data.random_split(self.train_val_set,[round(args.train_frac*dataset_length),round((1-args.train_frac)*dataset_length)],generator=torch.Generator().manual_seed(23))
         self.ldr_train = DataLoader(self.train_set, batch_size=self.args.local_bs, shuffle=True)
+        
+        self.val_set = DatasetSplit(val_set,idxs_val)
         self.ldr_val = DataLoader(self.val_set, batch_size = 1, shuffle=True)
 
     def train(self, net, n_epochs):
@@ -116,7 +118,7 @@ class ClientUpdate(object):
         gate.train()
         
         if(train_gate_only):
-            optimizer = torch.optim.Adam(gate.parameters(),lr=self.lr)
+            optimizer = torch.optim.Adam(gate.parameters(),lr=learning_rate)
         else:
             optimizer = torch.optim.Adam(list(net_local.parameters()) + list(gate.parameters()) + list(net_global.parameters()),lr=learning_rate)
 
