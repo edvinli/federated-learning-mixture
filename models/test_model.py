@@ -5,10 +5,22 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 import numpy as np
 import copy
 
+class DatasetSplit(Dataset):
+    def __init__(self, dataset, idxs):
+        self.dataset = dataset
+        self.idxs = list(idxs)
+
+    def __len__(self):
+        return len(self.idxs)
+
+    def __getitem__(self, item):
+        image, label = self.dataset[self.idxs[item]]
+        return image, label
+    
 def test_img(net_g, datatest, args):
     with torch.no_grad():
         net_g.eval()
@@ -19,6 +31,10 @@ def test_img(net_g, datatest, args):
         test_loss_local = 0
         correct_g = 0
         correct_local = 0
+        
+        datasize = len(datatest)
+        sub_idxs = np.random.choice(datasize,int(0.1*datasize),replace=False)
+        datatest = DatasetSplit(datatest,sub_idxs)
         data_loader = DataLoader(datatest, batch_size=1)
         args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         l = len(data_loader)
@@ -36,9 +52,9 @@ def test_img(net_g, datatest, args):
         #test_loss_local /= len(data_loader.dataset)
         accuracy_g = 100.00 * correct_g / len(data_loader.dataset)
         #accuracy_local = 100.00 * correct_local / len(data_loader.dataset)
-        if args.verbose:
-            print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
-                test_loss, correct, len(data_loader.dataset), accuracy))
+        #if args.verbose:
+            #print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
+                #test_loss, correct, len(data_loader.dataset), accuracy))
     return accuracy_g.item(), test_loss
 
 
@@ -49,6 +65,9 @@ def test_img_mix(net_l, net_g, gate, datatest, args):
         gate.eval()
         test_loss = 0
         correct = 0
+        datasize = len(datatest)
+        sub_idxs = np.random.choice(datasize,int(0.1*datasize),replace=False)
+        datatest = DatasetSplit(datatest,sub_idxs)
         data_loader = DataLoader(datatest, batch_size = 1)
         args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         l = len(data_loader)

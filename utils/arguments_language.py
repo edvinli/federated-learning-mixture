@@ -16,15 +16,11 @@ def args_parser():
     parser.add_argument('--n_data_val',type=float,default=200,help="validation datasize on each client")
     parser.add_argument('--overlap', action='store_true', help='whether to allow label overlap between clients or not')
     parser.add_argument('--alpha', type=float, default=0.0, help='value that controls dirichlet parameter for data size skew.')
-    parser.add_argument('--freeze', action='store_true', help='whether fo freeze base layers of finetune and gate')
     # model arguments
-    parser.add_argument('--model', type=str, default='cnn', help='which model to use')
-    parser.add_argument('--optim', type=str, default='sgd')
     parser.add_argument('--num_classes', type=int, default=10, help="number of classes")
-    parser.add_argument('--dirichlet',action='store_true',help='wheter to sample data size with dirichlet distr.')
                         
     # other arguments
-    parser.add_argument('--dataset', type=str, default='mnist', help="name of dataset")
+    parser.add_argument('--dataset', type=str, default='agnews', help="name of dataset")
     parser.add_argument('--iid', action='store_true', help='whether i.i.d or not')
     parser.add_argument('--gpu', type=int, default=0, help="GPU ID, -1 for CPU")
     parser.add_argument('--stopping_rounds', type=int, default=10, help='rounds of early stopping')

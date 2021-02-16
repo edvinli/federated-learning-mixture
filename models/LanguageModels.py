@@ -212,44 +212,116 @@ class GateCNNFahsionSoftmax(nn.Module):
         return x
 
 
-class LSTMClassifier(torch.nn.Module) :
-    def __init__(self, vocab_size, embedding_dim, hidden_dim) :
-        super(LSTMClassifier, self).__init__()
-        self.embeddings = nn.EmbeddingBag(vocab_size, embedding_dim)
-        #self.embeddings.weight.data.copy_(torch.from_numpy(glove_weights))
-        #self.embeddings.weight.requires_grad = False ## freeze embeddings
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
-        self.fc1 = nn.Linear(embedding_dim, 8)
-        self.dropout = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(8, 4)
+class RNNTextClassifier(nn.Module):
+    
+    def __init__(self, text_field, class_field, emb_dim, rnn_size):
+        super().__init__()        
+        
+        voc_size = len(text_field.vocab)
+        n_classes = len(class_field.vocab) 
+        
+        # Embedding layer.
+        self.embedding = nn.Embedding(voc_size, emb_dim)
+
+        # If we're using pre-trained embeddings, copy them into the model's embedding layer.
+        #if text_field.vocab.vectors is not None:
+        #    self.embedding.weight = torch.nn.Parameter(text_field.vocab.vectors, 
+        #                                               requires_grad=update_pretrained)
+        
+        # The RNN module: either a basic RNN, LSTM, or a GRU.
+        #self.rnn = nn.RNN(input_size=emb_dim, hidden_size=rnn_size, 
+        #                  bidirectional=True, num_layers=1)        
+        self.rnn = nn.LSTM(input_size=emb_dim, hidden_size=rnn_size, 
+                           bidirectional=True, num_layers=1)
+        #self.rnn = nn.GRU(input_size=emb_dim, hidden_size=rnn_size, 
+        #                  bidirectional=True, num_layers=1)
+
+        # And finally, a linear layer on top of the RNN layer to produce the output.
+        self.top_layer = nn.Linear(2*rnn_size, n_classes)
         self.activation = nn.LogSoftmax()
         
-    def forward(self, x, offsets):
-        x = self.embeddings(x,offsets)
-        x = self.dropout(x)
-        lstm_out, (ht, ct) = self.lstm(x.view(len(x), 1, -1))
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        out = self.activation(x)
+    def forward(self, texts):
+        # The words in the documents are encoded as integers. The shape of the documents
+        # tensor is (max_len, n_docs), where n_docs is the number of documents in this batch,
+        # and max_len is the maximal length of a document in the batch.
+
+        # First look up the embeddings for all the words in the documents.
+        # The shape is now (max_len, n_docs, emb_dim).
+        embedded = self.embedding(texts)
+        
+        # The RNNs return two tensors: one representing the outputs at all positions
+        # of the final layer, and another representing the final states of each layer.
+        # In this example, we'll use just the final states.
+        # NB: for a bidirectional RNN, the final state corresponds to the *last* token
+        # in the forward direction and the *first* token in the backward direction.
+        _, (final_state, _) = self.rnn(embedded)
+        
+        # The shape of final_state is (2*n_layers, n_docs, rnn_size), assuming that 
+        # the RNN is bidirectional.
+        # We select the top layer's forward and backward states and concatenate them.
+        top_forward = final_state[-2]
+        top_backward = final_state[-1]
+        top_both = torch.cat([top_forward, top_backward], dim=1)
+        top_both = self.top_layer(top_both)
+        out = self.activation(top_both)
+        
+        # Apply the linear layer and return the output.
+        #print(top_both.shape)
         return out
     
-class LSTMGate(torch.nn.Module) :
-    def __init__(self, vocab_size, embedding_dim, hidden_dim) :
-        super(LSTMGate, self).__init__()
-        self.embeddings = nn.EmbeddingBag(vocab_size, embedding_dim)
-        #self.embeddings.weight.data.copy_(torch.from_numpy(glove_weights))
-        #self.embeddings.weight.requires_grad = False ## freeze embeddings
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
-        self.fc1 = nn.Linear(embedding_dim, 8)
-        self.dropout = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(8,1)
+class RNNGate(nn.Module):
+    
+    def __init__(self, text_field, class_field, emb_dim, rnn_size):
+        super().__init__()        
+        
+        voc_size = len(text_field.vocab)
+        n_classes = len(class_field.vocab) 
+        
+        # Embedding layer.
+        self.embedding = nn.Embedding(voc_size, emb_dim)
+
+        # If we're using pre-trained embeddings, copy them into the model's embedding layer.
+        #if text_field.vocab.vectors is not None:
+        #    self.embedding.weight = torch.nn.Parameter(text_field.vocab.vectors, 
+        #                                               requires_grad=update_pretrained)
+        
+        # The RNN module: either a basic RNN, LSTM, or a GRU.
+        #self.rnn = nn.RNN(input_size=emb_dim, hidden_size=rnn_size, 
+        #                  bidirectional=True, num_layers=1)        
+        self.rnn = nn.LSTM(input_size=emb_dim, hidden_size=rnn_size, 
+                           bidirectional=True, num_layers=1)
+        #self.rnn = nn.GRU(input_size=emb_dim, hidden_size=rnn_size, 
+        #                  bidirectional=True, num_layers=1)
+
+        # And finally, a linear layer on top of the RNN layer to produce the output.
+        self.top_layer = nn.Linear(2*rnn_size, 1)
         self.activation = nn.Sigmoid()
         
-    def forward(self, x, offsets):
-        x = self.embeddings(x,offsets)
-        x = self.dropout(x)
-        lstm_out, (ht, ct) = self.lstm(x.view(len(x), 1, -1))
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        out = self.activation(x)
+    def forward(self, texts):
+        # The words in the documents are encoded as integers. The shape of the documents
+        # tensor is (max_len, n_docs), where n_docs is the number of documents in this batch,
+        # and max_len is the maximal length of a document in the batch.
+
+        # First look up the embeddings for all the words in the documents.
+        # The shape is now (max_len, n_docs, emb_dim).
+        embedded = self.embedding(texts)
+        
+        # The RNNs return two tensors: one representing the outputs at all positions
+        # of the final layer, and another representing the final states of each layer.
+        # In this example, we'll use just the final states.
+        # NB: for a bidirectional RNN, the final state corresponds to the *last* token
+        # in the forward direction and the *first* token in the backward direction.
+        _, (final_state, _) = self.rnn(embedded)
+        
+        # The shape of final_state is (2*n_layers, n_docs, rnn_size), assuming that 
+        # the RNN is bidirectional.
+        # We select the top layer's forward and backward states and concatenate them.
+        top_forward = final_state[-2]
+        top_backward = final_state[-1]
+        top_both = torch.cat([top_forward, top_backward], dim=1)
+        top_both = self.top_layer(top_both)
+        out = self.activation(top_both)
+        
+        # Apply the linear layer and return the output.
+        #print(top_both.shape)
         return out
