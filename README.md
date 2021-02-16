@@ -1,5 +1,6 @@
-# Federated learning using a mixture of experts
+# Specialized federated learning using a mixture of experts
 This repo contains code for the paper [Specialized federated learning using a mixture of experts](https://arxiv.org/abs/2010.02056).
+In this paper we use mixture of experts of a local and a global model for persoanlization in federated learning, which has minimal generalization loss as compared to a fine-tuned model or a locally trained model.
 
 # Example
 To run an experiment on the CIFAR-10 dataset, use the following line.
